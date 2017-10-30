@@ -29,6 +29,7 @@ class RepoModuleVersion(object):
         self.base = base
         self.parent = None
         self.repo_module = None
+        self.q = None
 
     def __lt__(self, other):
         # for finding latest
@@ -93,10 +94,19 @@ class RepoModuleVersion(object):
                 nevr = self.nevra_object_to_nevr_str(nevra_object)
                 nevra = "{}.{}".format(nevr, nevra_object.arch)
 
-                if nevra not in installed_nevras:
-                    self.base.install(nevr, reponame=self.repo.id, forms=hawkey.FORM_NEVR)
+
+                # HACK: return q instead of storing it as self.q
+                # TODO: verify that filter(nevra) really works correctly (possibly breaks multilib)
+                q = self.base.sack.query().filter(nevra=nevra)
+                if self.q is None:
+                    self.q = q
                 else:
-                    self.base.upgrade(nevr, reponame=self.repo.id)
+                    self.q = self.q.union(q)
+
+#                if nevra not in installed_nevras:
+#                    self.base.install(nevr, reponame=self.repo.id, forms=hawkey.FORM_NEVR)
+#                else:
+#                    self.base.upgrade(nevr, reponame=self.repo.id)
 
         self.base._module_persistor.set_data(self.repo_module, stream=self.stream,
                                              version=self.version)

@@ -45,6 +45,7 @@ class RepoModuleDict(OrderedDict):
         super(RepoModuleDict, self).__init__()
 
         self.base = base
+        self.q = None
 
     def add(self, repo_module_version):
         module = self.setdefault(repo_module_version.name, RepoModule())
@@ -363,6 +364,10 @@ class RepoModuleDict(OrderedDict):
                 profiles = installed_profiles
 
             module_version.upgrade(profiles)
+            if self.q is None:
+                self.q = module_version.q
+            else:
+                self.q = self.q.union(module_version.q)
 
         return skipped
 

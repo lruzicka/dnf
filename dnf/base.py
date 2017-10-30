@@ -1876,14 +1876,8 @@ class Base(object):
             self.repo_module_dict.upgrade_all()
 
             q = self.sack.query().upgrades()
-
-            filtered_rpms_name = []
-            for repo_module_version in self.repo_module_dict.list_module_version_installed():
-                for profile in repo_module_version.repo_module.conf.profiles:
-                    filtered_rpms_name.append(repo_module_version.rpms(profile))
-
-            for name in filtered_rpms_name:
-                q = q.filter(name__neq=name)
+            # HACK: self.repo_module_dict.upgrade_all() should return a query
+            q = q.union(self.repo_module_dict.q)
 
             # add obsoletes into transaction
             if self.conf.obsoletes:
